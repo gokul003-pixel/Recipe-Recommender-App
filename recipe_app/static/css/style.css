@@ -1,0 +1,101 @@
+/* static/css/style.css */
+
+body {
+    padding-bottom: 50px; /* Add padding at the bottom */
+}
+
+#recipe-output ul, #recipe-output ol {
+    margin-left: 1.5rem; /* Indent lists */
+    padding-left: 1.2rem; /* Adjust padding for ol numbering */
+}
+
+#recipe-output li {
+    margin-bottom: 0.5rem; /* Spacing between list items */
+}
+
+.btn-substitute {
+    font-size: 0.8em;
+    padding: 0.1rem 0.4rem;
+    vertical-align: middle; /* Align button nicely with text */
+}
+
+#substitution-output {
+    padding: 10px;
+    margin-top: 15px;
+    border: 1px dashed #ccc;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+/* --- Shopping List Specific Styles --- */
+
+#shopping-list-section h5 { /* Category Headers */
+    font-size: 1rem;
+    font-weight: bold;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #0d6efd; /* Bootstrap primary blue */
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.25rem;
+}
+
+#shopping-list-items .list-group-item {
+    border-left: 0; /* Remove left border from flush list items */
+    border-right: 0; /* Remove right border */
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+#shopping-list-items .form-check-label {
+    margin-left: 0.5rem; /* Space between checkbox and label */
+    word-break: break-word; /* Prevent long items overflowing */
+}
+
+/* Style for checked shopping list items label */
+#shopping-list-items .form-check-label.text-decoration-line-through {
+     /* Bootstrap handles line-through, text-muted adds gray color */
+     /* You could add opacity if desired */
+     /* opacity: 0.7; */
+}
+
+/* Style for the parent list item when checked */
+#shopping-list-items .list-group-item.list-group-item-light {
+    background-color: #f8f9fa; /* Light background for checked items */
+}
+
+
+/* Ensure delete button is small and aligned */
+#shopping-list-items .btn-delete-item {
+    line-height: 1; /* Adjust vertical alignment if needed */
+    font-size: 1.2rem; /* Make the 'x' slightly larger */
+    padding: 0 0.3rem; /* Fine-tune padding */
+    margin-left: 0.5rem; /* Space before delete button */
+    color: #dc3545; /* Bootstrap danger red */
+    border-color: transparent; /* Make border less prominent */
+    background-color: transparent;
+}
+#shopping-list-items .btn-delete-item:hover {
+    color: #fff;
+    background-color: #dc3545; /* Red background on hover */
+    border-color: #dc3545;
+}
+
+/* Ensure manual add input and button align well */
+#shopping-list-section .input-group .form-control {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+#shopping-list-section .input-group .btn {
+     border-top-left-radius: 0;
+     border-bottom-left-radius: 0;
+}
+
+/* Hidden textarea for copy fallback */
+#copy-list-textarea {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    opacity: 0;
+    height: 1px; /* Minimize potential layout shift */
+    width: 1px;
+}
