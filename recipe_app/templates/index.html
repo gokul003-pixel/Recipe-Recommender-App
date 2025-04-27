@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Generate Recipe{% endblock %}
+{% block title %}Recipe Recommender{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -36,47 +36,136 @@
 
         <div id="shopping-list-section" class="mt-5">
             <hr> <h3 class="mb-3">Shopping List</h3>
-
             <div class="input-group mb-3">
                 <input type="text" id="manual-add-item" class="form-control" placeholder="Manually add item">
                 <button id="manual-add-btn" class="btn btn-outline-secondary" type="button">Add</button>
             </div>
-
             <div id="shopping-list-items" class="mb-3">
                 <p><em>Your shopping list is empty. Add items from a recipe or manually.</em></p>
             </div>
-
             <div class="d-flex justify-content-between">
-                 <button id="copy-list-btn" class="btn btn-sm btn-info">Copy List</button>
-                 <button id="clear-list-btn" class="btn btn-sm btn-danger">Clear All</button>
+                 <button id="copy-list-btn" class="btn btn-sm btn-info" disabled>Copy List</button>
+                 <button id="clear-list-btn" class="btn btn-sm btn-danger" disabled>Clear All</button>
             </div>
-             <textarea id="copy-list-textarea" aria-hidden="true" style="position: absolute; left: -9999px; top: -9999px; opacity: 0;"></textarea> </div>
+             <textarea id="copy-list-textarea" aria-hidden="true" style="position: absolute; left: -9999px; top: -9999px; opacity: 0; height: 1px; width: 1px;"></textarea> </div>
         </div>
 
     <div class="col-md-7">
         <h3>Generated Recipe</h3>
         <div id="recipe-output" class="mt-3 p-3 border rounded bg-light" style="min-height: 200px;">
-            <p>Enter your ingredients and preferences, then click "Generate Recipe".</p>
+             {# Display initial message based on whether shared_recipe exists #}
+             {% if shared_recipe is defined and shared_recipe is not none %}
+               <p><em>Loading shared recipe...</em></p>
+             {% else %}
+               <p>Enter your ingredients and preferences, then click "Generate Recipe".</p>
+             {% endif %}
         </div>
         <div id="recipe-actions" class="mt-2" style="display: none;">
             <button id="add-to-list-btn" class="btn btn-sm btn-primary">Add Ingredients to Shopping List</button>
-            </div>
+            <button id="share-recipe-btn" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#shareModal">Share Recipe</button>
+            <button id="save-recipe-btn" class="btn btn-sm btn-success">Save Recipe (.txt)</button> {# <-- Added Save Button #}
+        </div>
         <div id="substitution-output" class="mt-3"></div>
     </div>
 </div>
 
-{% if shared_recipe %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Ensure the displayRecipe function is accessible, perhaps make it global in script.js
-        if (typeof displayRecipe === 'function') {
-             const recipeData = JSON.parse('{{ shared_recipe | tojson | escapejs }}'); // Safely inject JSON
-             displayRecipe(recipeData);
-        } else {
-            console.error("displayRecipe function not found. Cannot display shared recipe.");
-        }
-    });
-</script>
-{% endif %}
+<div class="modal fade" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="shareModalLabel">Share Recipe</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Share this recipe using the link below (link includes recipe data):</p>
+        <div class="input-group mb-3">
+          <input type="text" id="share-url-input" class="form-control" value="" readonly title="This link contains the full recipe data">
+          <button class="btn btn-outline-secondary" type="button" id="copy-share-link-btn" title="Copy link to clipboard">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16"> <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/> <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/> </svg>
+          </button>
+        </div>
+        <div id="copy-link-feedback" class="text-success small" style="display: none;">Link copied!</div>
+        <hr>
+        <p>Or share directly:</p>
+        <div class="d-flex justify-content-around">
+            <a id="share-email-link" href="#" class="btn btn-light" target="_blank" title="Share via Email">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-envelope" viewBox="0 0 16 16"> <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.778 2.867L15 11.114V5.383zm-.034 6.878L9.271 8.82 8 9.583 6.728 8.82l-5.694 3.44A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.739zM1 11.114l4.778-2.867L1 5.383v5.73z"/> </svg>
+            </a>
+            <a id="share-facebook-link" href="#" class="btn btn-light" target="_blank" title="Share on Facebook">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#1877F2" class="bi bi-facebook" viewBox="0 0 16 16"> <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0 0 3.603 0 8.049c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z"/> </svg>
+            </a>
+            <a id="share-twitter-link" href="#" class="btn btn-light" target="_blank" title="Share on Twitter (X)">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-twitter-x" viewBox="0 0 16 16"> <path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.601.75Zm-.86 13.028h1.36L4.323 2.145H2.865l8.875 11.633Z"/> </svg>
+             </a>
+            <a id="share-whatsapp-link" href="#" class="btn btn-light" target="_blank" title="Share on WhatsApp">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#25D366" class="bi bi-whatsapp" viewBox="0 0 16 16"> <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.93 7.93 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.89 7.89 0 0 0 13.6 2.326zM7.994 14.521a6.57 6.57 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/> </svg>
+            </a>
+            <button id="direct-share-btn" class="btn btn-light" title="Share via system dialog">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-share-fill" viewBox="0 0 16 16"> <path d="M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.5 2.5 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5z"/> </svg>
+            </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
 
+
+{% block scripts_extra %}
+{# Script to handle shared recipe data passed from Flask (Stateless) #}
+{% if shared_recipe is defined and shared_recipe is not none %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("[Share Script] DOMContentLoaded triggered.");
+
+    try {
+        const recipeData = {{ shared_recipe | tojson | safe if shared_recipe is defined and shared_recipe is not none else 'null' }};
+        console.log("[Share Script] Injected recipeData type:", typeof recipeData);
+        if (recipeData) {
+             console.log("[Share Script] recipeData title (if exists):", recipeData.title);
+        } else {
+            console.log("[Share Script] recipeData is null or was not provided.");
+        }
+
+        if (recipeData && typeof recipeData === 'object') {
+            console.log("[Share Script] Recipe data is valid object. Checking for display function...");
+            if (typeof window.displayRecipe === 'function') {
+                console.log("[Share Script] window.displayRecipe function FOUND. Attempting to call...");
+                try {
+                    window.displayRecipe(recipeData);
+                    console.log("[Share Script] window.displayRecipe call finished successfully.");
+                    setTimeout(() => {
+                        console.log("[Share Script] Attempting to scroll to recipe output.");
+                        document.getElementById('recipe-output')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 150);
+                } catch (displayFuncError) {
+                    console.error("[Share Script] Error occurred *during* window.displayRecipe execution:", displayFuncError);
+                    const outputDiv = document.getElementById('recipe-output');
+                    if(outputDiv) outputDiv.innerHTML = '<p class="text-danger">Error displaying recipe content. Check console.</p>';
+                }
+            } else {
+                console.error("[Share Script] window.displayRecipe function NOT found.");
+                const outputDiv = document.getElementById('recipe-output');
+                if(outputDiv) outputDiv.innerHTML = '<p class="text-danger">Error: Recipe display function (window.displayRecipe) is missing or not loaded correctly.</p>';
+            }
+        } else {
+            console.log("[Share Script] No valid recipe data was injected from Flask template.");
+            const outputDiv = document.getElementById('recipe-output');
+            const loadingMessage = "Loading shared recipe...";
+            if (outputDiv && outputDiv.textContent.includes(loadingMessage)) {
+               outputDiv.innerHTML = '<p>No recipe data found in the link, or the link is invalid.</p>';
+            }
+        }
+    } catch (scriptBlockError) {
+        console.error("[Share Script] CRITICAL ERROR in shared recipe script block:", scriptBlockError);
+        const outputDiv = document.getElementById('recipe-output');
+        if(outputDiv) outputDiv.innerHTML = '<p class="text-danger">A critical error occurred processing the shared recipe link. Check browser console for details.</p>';
+    }
+    console.log("[Share Script] Finished executing.");
+});
+</script>
+{% endif %} {# Ensure endif for the shared_recipe check #}
 {% endblock %}
